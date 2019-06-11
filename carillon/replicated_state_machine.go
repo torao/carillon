@@ -14,6 +14,9 @@ type StateMachine struct {
 
     // State DB
     db *badger.DB
+
+    // 仮想マシン
+    vm VirtualMachine
 }
 
 func NewStateMachine(stateDBPath string) (*StateMachine, error) {
@@ -32,13 +35,31 @@ func NewStateMachine(stateDBPath string) (*StateMachine, error) {
     sm.logicalClock = 0
     sm.db = db
 
+    sm.vm = &NoopVM{}
+    vmerr := sm.vm.Init(db)
+    if vmerr != nil {
+        sm.Close()
+        return nil, vmerr
+    }
+
     return sm, nil
 }
 
+func (sm *StateMachine) Run(msg *Message) error {
+    return sm.vm.Run(msg)
+}
+
 func (sm *StateMachine) Close() {
-    err := sm.db.Close()
-    if err != nil {
-        log.Fatalf("%s", err)
+    vmerr := sm.vm.Close()
+    if vmerr != nil {
+        log.Fatalf("%s", vmerr)
+    } else {
+        log.Printf("virtual machine closed")
+    }
+
+    dberr := sm.db.Close()
+    if dberr != nil {
+        log.Fatalf("%s", dberr)
     } else {
         log.Printf("database closed")
     }
