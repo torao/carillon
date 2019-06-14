@@ -4,38 +4,36 @@
 package carillon
 
 import (
-    "github.com/dgraph-io/badger"
+    "github.com/tendermint/iavl"
+    tmdb "github.com/tendermint/tendermint/libs/db"
     "log"
 )
+
+type StateDB *iavl.MutableTree
 
 type StateMachine struct {
     // このステートマシンの現在の論理クロック
     logicalClock uint64
 
     // State DB
-    db *badger.DB
+    db StateDB
 
     // 仮想マシン
     vm VirtualMachine
+
 }
 
 func NewStateMachine(stateDBPath string) (*StateMachine, error) {
 
-    // 指定されたディレクトリに配置されている Badger データベースをオープン
-    opts := badger.DefaultOptions
-    opts.Dir = stateDBPath
-    opts.ValueDir = stateDBPath
-    db, err := badger.Open(opts)
-    if err != nil {
-        return nil, err
-    }
+    // 指定されたディレクトリに配置されているデータベースをオープン
+    db := iavl.NewMutableTree(tmdb.NewDB("name", tmdb.GoLevelDBBackend, stateDBPath), 128)
 
     // ステートマシンの構築と初期状態のロード
     sm := new(StateMachine)
     sm.logicalClock = 0
-    sm.db = db
+    sm.db = iavl.NewMutableTree(tmdb.NewMemDB(), 128)
 
-    sm.vm = &NoopVM{}
+    sm.vm = &SimpleVM{}
     vmerr := sm.vm.Init(db)
     if vmerr != nil {
         sm.Close()
@@ -55,12 +53,5 @@ func (sm *StateMachine) Close() {
         log.Fatalf("%s", vmerr)
     } else {
         log.Printf("virtual machine closed")
-    }
-
-    dberr := sm.db.Close()
-    if dberr != nil {
-        log.Fatalf("%s", dberr)
-    } else {
-        log.Printf("database closed")
     }
 }

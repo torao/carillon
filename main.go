@@ -29,9 +29,16 @@ func main() {
     } else {
         defer sm.Close()
 
-        msg := &carillon.Message{ Payload: []}
-        sm.Run(msg)
-        fmt.Println("hello, world")
+        msg := &carillon.Message{Payload: []byte("x=10")}
+        smErr := sm.Run(msg)
+        if smErr != nil {
+            _, err := fmt.Fprintf(os.Stderr, "ERROR: %s\n", smErr)
+            if err != nil {
+                log.Fatalf("%s", err)
+            }
+            os.Exit(1)
+        }
+        log.Println("exiting carillon")
     }
 }
 
