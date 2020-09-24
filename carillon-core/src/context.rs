@@ -4,8 +4,6 @@ use crate::error::{Detail, Result};
 use crate::security::KeyPair;
 
 pub const DIR_SECURITY: &str = "security";
-pub const DIR_SECURITY_LOCAL: &str = "local";
-pub const FILE_KEY_PAIR: &str = "";
 
 pub struct Context<'ctx> {
   dir: Box<&'ctx Path>,
@@ -24,4 +22,8 @@ impl<'ctx> Context<'ctx> {
   fn absolute_path(&self, path: &str) -> PathBuf {
     self.dir.join(path)
   }
+}
+
+pub fn localnode_key_pair_file(key_algorithm: &str) -> String {
+  format!("localnode_{}", key_algorithm)
 }

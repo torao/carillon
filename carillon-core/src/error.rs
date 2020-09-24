@@ -16,6 +16,10 @@ pub enum Detail {
   #[error(transparent)]
   IO(#[from] std::io::Error),
 
+  // 公開鍵暗号: 鍵の復元に失敗
+  #[error("Cannot recover the key from the specified byte array: {message}")]
+  CannotRestoreKey { message: String },
+
   // 公開鍵暗号: 互換性のない鍵の変換
   #[error("incompatible key conversions: {message}")]
   IncompatibleKeyConversions { message: String },

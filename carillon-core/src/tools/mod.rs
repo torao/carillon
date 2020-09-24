@@ -1,6 +1,5 @@
 use std::path::Path;
 
-use crate::error::Detail;
 use crate::Result;
 
 pub mod init;
@@ -12,7 +11,8 @@ pub fn create_dirs_if_not_exists(dir: &Path) -> Result<()> {
   Ok(())
 }
 
-pub fn abs_path(path: &Path) -> String {
+pub fn abs_path<P: AsRef<Path>>(path: P) -> String {
+  let path = path.as_ref();
   let path = if path.is_absolute() {
     path.to_path_buf()
   } else {

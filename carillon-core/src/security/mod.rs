@@ -31,30 +31,33 @@ pub trait PublicKeyAlgorithm: Algorithm {
 }
 
 /// 公開鍵ペアを表すトレイト。
-/// この鍵ペア自体が秘密鍵としての機能を実装しています。秘密鍵そのものを参照する手段を提供していない点に注意。
 ///
 pub trait KeyPair {
+  /// この鍵ペアの秘密鍵をバイト列に変換します。
+  fn to_bytes(&self) -> Vec<u8>;
+
+  /// 指定されたバイト列から鍵ペアを復元します。
+  fn from_bytes(bytes: &[u8]) -> Result<Self> where Self: Sized;
+
   /// この鍵ペアの公開鍵を参照します。
-  ///
   fn get_public_key(&self) -> Box<dyn PublicKey>;
 
-  /// この鍵ペアの秘密鍵を使用して指定されたメッセージに対する署名を生成します。
-  /// 生成された署名は公開鍵の `verify_signature()` を使用して検証することができます。
-  ///
+  /// 秘密鍵を使用してメッセージに対する署名を生成します。
+  /// 生成された署名はペアとなる公開鍵の `verify_signature()` で検証することができます。
   fn generate_signature(&self, message: &[u8]) -> Result<Signature>;
 }
 
 /// 公開鍵を表すトレイト。
 pub trait PublicKey {
-  /// この公開鍵に対する秘密鍵によって作成された署名を検証します。
-  fn verify_signature(&self, signature: Signature, message: &[u8]) -> Result<bool>;
-
   /// この公開鍵をバイト列に変換します。返値のバイト列を `from_bytes()` に適用することで公開鍵を復元することが
   ///できます。
   fn to_bytes(&self) -> Vec<u8>;
 
   /// 指定されたバイト列から公開鍵を復元します。
   fn from_bytes(bytes: &[u8]) -> Result<Self> where Self: Sized;
+
+  /// この公開鍵に対する秘密鍵によって作成された署名を検証します。
+  fn verify_signature(&self, signature: Signature, message: &[u8]) -> Result<bool>;
 }
 
 /// 署名を表すバイト列。
