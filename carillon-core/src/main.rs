@@ -9,6 +9,7 @@ use log4rs;
 
 use carillon::context;
 use carillon::error::{Detail, Result};
+use carillon::tools;
 
 /// # Carillon CLI
 ///
@@ -70,11 +71,13 @@ fn main() {
 
   // コンテキストディレクトリの新規作成
   if let Some(matches) = matches.subcommand_matches("init") {
-    let dir = Path::new(matches.value_of("DIR").unwrap());
-    let force = matches.is_present("force");
-    match init(dir, force) {
+    let init = tools::init::Init {
+      dir: Path::new(matches.value_of("DIR").unwrap()),
+      force: matches.is_present("force"),
+    };
+    match init.init() {
       Ok(()) => {
-        log::info!("SUCCESS: The context directory was created successfully: {}", abs_path(dir))
+        log::info!("SUCCESS: The context directory was created successfully: {}", tools::abs_path(init.dir))
       }
       Err(err) => error(&err),
     }
@@ -83,42 +86,6 @@ fn main() {
 
 fn bootstrap(dir: &Path) {
   let context = context::Context::new(dir);
-}
-
-/// 指定されたディレクトリに新しいノードコンテキストを作成します。
-fn init(dir: &Path, force: bool) -> Result<()> {
-  // 既存の構成を上書きしないようにディレクトリが存在しないことを確認
-  if dir.exists() {
-    if !force {
-      return Err(Detail::FileOrDirectoryExists { location: abs_path(dir) });
-    } else {
-      log::warn!("Overwriting the existing directory: {}", abs_path(dir))
-    }
-  } else {
-    std::fs::create_dir_all(dir)?;
-  }
-
-  // ノード鍵の作成
-  let local_dir = dir.join(context::DIR_SECURITY).join(context::DIR_SECURITY_LOCAL);
-  create_dir_if_not_exists(local_dir.as_path())?;
-
-  Ok(())
-}
-
-fn create_dir_if_not_exists(dir: &Path) -> Result<()> {
-  if !dir.exists() {
-    std::fs::create_dir_all(dir)?;
-  }
-  Ok(())
-}
-
-fn abs_path(path: &Path) -> String {
-  let path = if path.is_absolute() {
-    path.to_path_buf()
-  } else {
-    std::env::current_dir().unwrap().join(path)
-  };
-  path.display().to_string()
 }
 
 fn error(err: &dyn std::error::Error) {
