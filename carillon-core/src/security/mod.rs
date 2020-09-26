@@ -40,7 +40,7 @@ pub trait KeyPair {
   fn from_bytes(bytes: &[u8]) -> Result<Self> where Self: Sized;
 
   /// この鍵ペアの公開鍵を参照します。
-  fn get_public_key(&self) -> Box<dyn PublicKey>;
+  fn public_key(&self) -> Box<dyn PublicKey>;
 
   /// 秘密鍵を使用してメッセージに対する署名を生成します。
   /// 生成された署名はペアとなる公開鍵の `verify_signature()` で検証することができます。
@@ -52,6 +52,10 @@ pub trait PublicKey {
   /// この公開鍵をバイト列に変換します。返値のバイト列を `from_bytes()` に適用することで公開鍵を復元することが
   ///できます。
   fn to_bytes(&self) -> Vec<u8>;
+
+  fn address(&self, length: usize) -> String {
+
+  }
 
   /// 指定されたバイト列から公開鍵を復元します。
   fn from_bytes(bytes: &[u8]) -> Result<Self> where Self: Sized;

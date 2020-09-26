@@ -36,7 +36,7 @@ impl security::KeyPair for KeyPair {
       .map_err(|err| Detail::CannotRestoreKey { message: err.to_string() })
   }
 
-  fn get_public_key(&self) -> Box<dyn security::PublicKey> {
+  fn public_key(&self) -> Box<dyn security::PublicKey> {
     Box::new(PublicKey { public_key: self.key_pair.public })
   }
 
