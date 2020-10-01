@@ -2,6 +2,8 @@ use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 
+use chrono;
+
 use crate::context;
 use crate::context::localnode_key_pair_file;
 use crate::error::{Detail, Result};
@@ -44,12 +46,25 @@ impl<'a> Init<'a> {
     let mut file = File::create(&public_key_file)?;
     file.write_all(key_pair.public_key().to_bytes().as_slice())?;
     log::info!("A public key for node is generated: {}", public_key_file.to_string_lossy());
-    log::info!("", key_pair.public_key())
+    log::info!("Node address: {}", key_pair.public_key().address());
+
+    // ノード設定の作成
+    let local_datetime: chrono::DateTime<chrono::Local> = chrono::Local::now();
+    let conf_file = self.dir.join("carillon.toml");
+    let mut file = File::create(&conf_file)?;
+    file.write_all(INIT_CONFIG
+      .replace("{datetime}", local_datetime.to_string().as_str())
+      .replace("{address}", key_pair.public_key().address().as_str()).as_bytes())?;
+    log::info!("The initial configuration file was saved: {}", conf_file.to_string_lossy());
 
     Ok(())
   }
 }
 
-const INIT_CONFIG: &str = r#"
-This is a "raw string literal," roughly equivalent to a heredoc.
+/// 初期状態の設定ファイルの内容。
+const INIT_CONFIG: &str = r#"# {address} @ {datetime}
+[node.identity]
+method = "private_key"
+private_key.algorithm = "ed25519"
+private_key.location = "security/id_ed25519"
 "#;

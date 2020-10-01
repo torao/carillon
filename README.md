@@ -1,2 +1,4 @@
 # carillon
-Peer-to-Peer Messaging Framework
+Peer-to-Peer Distributed Database
+
+Carillon is a 

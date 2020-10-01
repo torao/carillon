@@ -1,4 +1,7 @@
+use std::io;
 use std::path::{Path, PathBuf};
+
+use toml;
 
 use crate::error::{Detail, Result};
 use crate::security::KeyPair;
@@ -17,6 +20,10 @@ impl<'ctx> Context<'ctx> {
     } else {
       Ok(Box::new(Context { dir: Box::new(dir.clone()) }))
     }
+
+    let conf_file = dir.join("carillon.toml");
+    let conf = std::fs::read_to_string(conf_file)?;
+    let conf: Settings = toml::from_str(conf.as_str())?;
   }
 
   fn absolute_path(&self, path: &str) -> PathBuf {
@@ -26,4 +33,26 @@ impl<'ctx> Context<'ctx> {
 
 pub fn localnode_key_pair_file(key_algorithm: &str) -> String {
   format!("localnode_{}", key_algorithm)
+}
+
+#[derive(Debug, Deserialize)]
+struct Settings {
+  node: Node
+}
+
+#[derive(Debug, Deserialize)]
+struct Node {
+  identity: Identity,
+}
+
+#[derive(Debug, Deserialize)]
+struct Identity {
+  method: Option<String>,
+  private_key: Option<PrivateKey>,
+}
+
+#[derive(Debug, Deserialize)]
+struct PrivateKey {
+  algorithm: Option<String>,
+  location: Option<String>,
 }

@@ -1,3 +1,4 @@
+use num::BigUint;
 use rand::{CryptoRng, RngCore};
 use rand::rngs::OsRng;
 
@@ -53,8 +54,9 @@ pub trait PublicKey {
   ///できます。
   fn to_bytes(&self) -> Vec<u8>;
 
-  fn address(&self, length: usize) -> String {
-
+  /// この公開鍵のアドレスを参照します。
+  fn address(&self) -> String {
+    BigUint::from_bytes_be(self.to_bytes().as_slice()).to_str_radix(36)
   }
 
   /// 指定されたバイト列から公開鍵を復元します。
