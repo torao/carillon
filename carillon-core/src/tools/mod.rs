@@ -3,6 +3,7 @@ use std::path::Path;
 use crate::Result;
 
 pub mod init;
+pub mod start;
 
 pub fn create_dirs_if_not_exists(dir: &Path) -> Result<()> {
   if !dir.is_dir() {

@@ -7,8 +7,6 @@ use clap::{App, Arg, SubCommand};
 use log;
 use log4rs;
 
-use carillon::context;
-use carillon::error::{Detail, Result};
 use carillon::tools;
 
 /// # Carillon CLI
@@ -69,23 +67,31 @@ fn main() {
     error(&err)
   }
 
-  // コンテキストディレクトリの新規作成
   if let Some(matches) = matches.subcommand_matches("init") {
+    // コンテキストディレクトリの新規作成
     let init = tools::init::Init {
       dir: Path::new(matches.value_of("DIR").unwrap()),
       force: matches.is_present("force"),
     };
     match init.init() {
-      Ok(()) => {
-        log::info!("SUCCESS: The context directory was created successfully: {}", tools::abs_path(init.dir))
-      }
+      Ok(()) => log::info!(
+        "SUCCESS: The context directory was created successfully: {}",
+        tools::abs_path(init.dir)
+      ),
+      Err(err) => error(&err),
+    }
+  } else if let Some(matches) = matches.subcommand_matches("start") {
+    // ノードの起動
+    let dir = match matches.value_of("DIR") {
+      Some(dir) => Path::new(dir).to_path_buf(),
+      None => std::env::current_dir().unwrap_or(Path::new(".").to_path_buf()),
+    };
+    let start = tools::start::Start { dir: &dir };
+    match start.start() {
+      Ok(()) => log::info!("The carillon node has been deactivated"),
       Err(err) => error(&err),
     }
   }
-}
-
-fn bootstrap(dir: &Path) {
-  let context = context::Context::new(dir);
 }
 
 fn error(err: &dyn std::error::Error) {

@@ -29,8 +29,8 @@ pub enum Detail {
   FailedToSign { message: String },
 
   // 設定内容が不正
-  #[error("{location}({line}:{column})")]
-  InvalidConfig { location: String, line: u64, column: u64 },
+  #[error("{location}({line}:{column}): {message}")]
+  InvalidConfig { message: String, location: String, line: u64, column: u64 },
 }
 
 pub type Result<T> = std::result::Result<T, Detail>;

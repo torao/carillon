@@ -1,6 +1,6 @@
 use num::BigUint;
-use rand::{CryptoRng, RngCore};
 use rand::rngs::OsRng;
+use rand::{CryptoRng, RngCore};
 
 use crate::Result;
 
@@ -28,7 +28,8 @@ pub trait PublicKeyAlgorithm: Algorithm {
   /// 指定された CSPRNG (暗号論的擬似乱数生成器) に基づいて新しい公開鍵ペアを生成します。
   ///
   fn generate_key_pair_from<CSPRNG>(csprng: &mut CSPRNG) -> Box<dyn KeyPair>
-    where CSPRNG: CryptoRng + RngCore;
+  where
+    CSPRNG: CryptoRng + RngCore;
 }
 
 /// 公開鍵ペアを表すトレイト。
@@ -38,7 +39,9 @@ pub trait KeyPair {
   fn to_bytes(&self) -> Vec<u8>;
 
   /// 指定されたバイト列から鍵ペアを復元します。
-  fn from_bytes(bytes: &[u8]) -> Result<Self> where Self: Sized;
+  fn from_bytes(bytes: &[u8]) -> Result<Self>
+  where
+    Self: Sized;
 
   /// この鍵ペアの公開鍵を参照します。
   fn public_key(&self) -> Box<dyn PublicKey>;
@@ -60,7 +63,9 @@ pub trait PublicKey {
   }
 
   /// 指定されたバイト列から公開鍵を復元します。
-  fn from_bytes(bytes: &[u8]) -> Result<Self> where Self: Sized;
+  fn from_bytes(bytes: &[u8]) -> Result<Self>
+  where
+    Self: Sized;
 
   /// この公開鍵に対する秘密鍵によって作成された署名を検証します。
   fn verify_signature(&self, signature: Signature, message: &[u8]) -> Result<bool>;

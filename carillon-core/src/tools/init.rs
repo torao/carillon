@@ -7,8 +7,8 @@ use chrono;
 use crate::context;
 use crate::context::localnode_key_pair_file;
 use crate::error::{Detail, Result};
+use crate::security::ed25519::Ed25519;
 use crate::security::{Algorithm, PublicKeyAlgorithm};
-use crate::security::ed25519::{Ed25519, PublicKey};
 
 use super::*;
 
@@ -35,7 +35,7 @@ impl<'a> Init<'a> {
     let local_dir = self.dir.join(context::DIR_SECURITY);
     create_dirs_if_not_exists(local_dir.as_path())?;
     let key_pair = Ed25519::generate_key_pair();
-    let mut private_key_file = local_dir.join(localnode_key_pair_file(Ed25519::id()));
+    let private_key_file = local_dir.join(localnode_key_pair_file(Ed25519::id()));
     let mut file = File::create(&private_key_file)?;
     file.write_all(key_pair.to_bytes().as_slice())?;
     log::info!("A node key is generated: {}", private_key_file.to_string_lossy());
@@ -52,9 +52,12 @@ impl<'a> Init<'a> {
     let local_datetime: chrono::DateTime<chrono::Local> = chrono::Local::now();
     let conf_file = self.dir.join("carillon.toml");
     let mut file = File::create(&conf_file)?;
-    file.write_all(INIT_CONFIG
-      .replace("{datetime}", local_datetime.to_string().as_str())
-      .replace("{address}", key_pair.public_key().address().as_str()).as_bytes())?;
+    file.write_all(
+      INIT_CONFIG
+        .replace("{datetime}", local_datetime.to_string().as_str())
+        .replace("{address}", key_pair.public_key().address().as_str())
+        .as_bytes(),
+    )?;
     log::info!("The initial configuration file was saved: {}", conf_file.to_string_lossy());
 
     Ok(())
