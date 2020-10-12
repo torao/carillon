@@ -1,11 +1,14 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use serde::Deserialize;
 use toml;
 
 use crate::error::{Detail, Result};
+use crate::security;
+use crate::security::ed25519;
 
 pub const DIR_SECURITY: &str = "security";
+pub const DEFAULT_IDENTITY_METHOD: &str = "private_key";
 
 pub struct Context<'ctx> {
   dir: Box<&'ctx Path>,
@@ -33,6 +36,42 @@ impl<'ctx> Context<'ctx> {
     })?;
     Ok(Box::new(Context { dir: Box::new(dir.clone()), settings: Box::new(conf) }))
   }
+
+  pub fn key_pair(&self) -> Result<Box<dyn security::KeyPair>> {
+    match &self.settings.node.identity {
+      Identity::PrivateKey { algorithm, location } => {
+        let algorithm = match algorithm.as_str() {
+          "ed25519" => ed25519::algorithm(),
+          unsupported => {
+            return Err(Detail::UnsupportedSetting {
+              location: self.dir.to_string_lossy().to_string(),
+              item: "public-key algorithm",
+              value: unsupported.to_string(),
+            });
+          }
+        };
+        let path = self.resolve(location.as_str());
+        if !path.is_file() {
+          Err(Detail::FileOrDirectoryNotExist {
+            location: path.to_string_lossy().to_string()
+          })
+        } else {
+          let bytes = std::fs::read(path)?;
+          let key_pair = algorithm.restore_key_pair(&bytes)?;
+          Ok(key_pair)
+        }
+      }
+    }
+  }
+
+  /// このコンテキストのディレクトリを基準に指定されたパスを参照します。指定されたパスが絶対パスの場合は
+  fn resolve(&self, path: &str) -> PathBuf {
+    if Path::new(path).is_absolute() {
+      PathBuf::from(path)
+    } else {
+      self.dir.join(path)
+    }
+  }
 }
 
 pub fn localnode_key_pair_file(key_algorithm: &str) -> String {
@@ -51,9 +90,9 @@ struct Node {
 
 #[derive(Debug, Deserialize)]
 enum Identity {
-  #[serde(rename="private_key")]
+  #[serde(rename = "private_key")]
   PrivateKey {
     algorithm: String,
-    location: String
+    location: String,
   },
 }

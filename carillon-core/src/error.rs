@@ -28,9 +28,13 @@ pub enum Detail {
   #[error("failed to sign: {message}")]
   FailedToSign { message: String },
 
-  // 設定内容が不正
+  // 設定ファイルのフォーマットが不正
   #[error("{location}({line}:{column}): {message}")]
   InvalidConfig { message: String, location: String, line: u64, column: u64 },
+
+  // 設定: 未定義の設定項目
+  #[error("{location}: Unsupported {item}: {value}")]
+  UnsupportedSetting { location: String, item: &'static str, value: String },
 }
 
 pub type Result<T> = std::result::Result<T, Detail>;
