@@ -1,23 +1,18 @@
 use ed25519_dalek::{Signer, Verifier};
-use rand::{CryptoRng, RngCore};
 use rand::prelude::StdRng;
 use rand::rngs::OsRng;
 use rand::SeedableRng;
+use rand::{CryptoRng, RngCore};
 
 use crate::error::Detail;
-use crate::Result;
 use crate::security;
 use crate::security::PublicKeyImpl;
+use crate::Result;
 
 const SIGNATURE_SIZE: usize = 64;
 
 pub fn algorithm() -> PublicKeyImpl {
-  PublicKeyImpl {
-    id: "ed25519",
-    generate_key_pair,
-    generate_key_pair_from,
-    restore_key_pair,
-  }
+  PublicKeyImpl { id: "ed25519", generate_key_pair, generate_key_pair_from, restore_key_pair }
 }
 
 fn generate_key_pair() -> Box<dyn security::KeyPair> {
@@ -31,7 +26,8 @@ fn generate_key_pair_from(seed: u64) -> Box<dyn security::KeyPair> {
 }
 
 fn generate_key_pair_from_csprng<CSPRNG>(csprng: &mut CSPRNG) -> Box<dyn security::KeyPair>
-  where CSPRNG: CryptoRng + RngCore
+where
+  CSPRNG: CryptoRng + RngCore,
 {
   let key_pair = ed25519_dalek::Keypair::generate(csprng);
   Box::new(KeyPair { key_pair })
@@ -40,7 +36,7 @@ fn generate_key_pair_from_csprng<CSPRNG>(csprng: &mut CSPRNG) -> Box<dyn securit
 fn restore_key_pair(bytes: &[u8]) -> Result<Box<dyn security::KeyPair>> {
   match ed25519_dalek::Keypair::from_bytes(bytes) {
     Ok(key_pair) => Ok(Box::new(KeyPair { key_pair })),
-    Err(err) => Err(Detail::CannotRestoreKey { message: err.to_string() })
+    Err(err) => Err(Detail::CannotRestoreKey { message: err.to_string() }),
   }
 }
 
@@ -75,8 +71,8 @@ impl security::PublicKey for PublicKey {
     self.public_key.to_bytes().to_vec()
   }
   fn from_bytes(bytes: &[u8]) -> Result<Self>
-    where
-      Self: Sized,
+  where
+    Self: Sized,
   {
     match ed25519_dalek::PublicKey::from_bytes(bytes) {
       Ok(public_key) => Ok(PublicKey { public_key }),

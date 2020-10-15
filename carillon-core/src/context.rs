@@ -37,6 +37,7 @@ impl<'ctx> Context<'ctx> {
     Ok(Box::new(Context { dir: Box::new(dir.clone()), settings: Box::new(conf) }))
   }
 
+  /// このコンテキストの鍵ペアをロードします。
   pub fn key_pair(&self) -> Result<Box<dyn security::KeyPair>> {
     match &self.settings.node.identity {
       Identity::PrivateKey { algorithm, location } => {
@@ -52,9 +53,7 @@ impl<'ctx> Context<'ctx> {
         };
         let path = self.resolve(location.as_str());
         if !path.is_file() {
-          Err(Detail::FileOrDirectoryNotExist {
-            location: path.to_string_lossy().to_string()
-          })
+          Err(Detail::FileOrDirectoryNotExist { location: path.to_string_lossy().to_string() })
         } else {
           let bytes = std::fs::read(path)?;
           let key_pair = algorithm.restore_key_pair(&bytes)?;
@@ -91,8 +90,5 @@ struct Node {
 #[derive(Debug, Deserialize)]
 enum Identity {
   #[serde(rename = "private_key")]
-  PrivateKey {
-    algorithm: String,
-    location: String,
-  },
+  PrivateKey { algorithm: String, location: String },
 }

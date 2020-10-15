@@ -5,7 +5,7 @@ use std::path::Path;
 use chrono;
 
 use crate::context;
-use crate::context::{Context, localnode_key_pair_file};
+use crate::context::{localnode_key_pair_file, Context};
 use crate::error::{Detail, Result};
 use crate::security::ed25519;
 
@@ -55,7 +55,7 @@ impl<'a> Init<'a> {
     file.write_all(
       INIT_CONFIG
         .replace("{datetime}", local_datetime.to_string().as_str())
-        .replace("{address}", key_pair.public_key().address().as_str())
+        .replace("{address}", key_pair.public_key().address().to_string().as_str())
         .replace("{key_location}", DEFAULT_KEY_LOCATION)
         .replace("{key_algorithm}", DEFAULT_KEY_ALGORITHM)
         .as_bytes(),
@@ -64,8 +64,11 @@ impl<'a> Init<'a> {
 
     // 作成したコンテキストの情報を出力
     let context = Context::new(self.dir)?;
-    log::info!("New Carillon node has been built on {}: {}",
-     self.dir.to_string_lossy(), context.key_pair()?.public_key().address());
+    log::info!(
+      "New Carillon node has been built on {}: {}",
+      self.dir.to_string_lossy(),
+      context.key_pair()?.public_key().address()
+    );
 
     Ok(())
   }

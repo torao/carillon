@@ -1,13 +1,11 @@
-use num::BigUint;
-use rand::{CryptoRng, RngCore};
+use std::cmp::min;
+
+use num::range;
+use uuid::Uuid;
 
 use crate::Result;
 
 pub mod ed25519;
-
-pub fn rng<T>(r: T) -> T where T: CryptoRng + RngCore {
-  r
-}
 
 /// 公開鍵アルゴリズムの機能を表す構造体。
 ///
@@ -75,14 +73,19 @@ pub trait PublicKey {
   fn to_bytes(&self) -> Vec<u8>;
 
   /// この公開鍵のアドレスを参照します。
-  fn address(&self) -> String {
-    BigUint::from_bytes_be(self.to_bytes().as_slice()).to_str_radix(36)
+  fn address(&self) -> Uuid {
+    let mut buffer = [0u8; 16];
+    let bytes = self.to_bytes();
+    for i in range(0, min(buffer.len(), bytes.len())) {
+      buffer[i] = bytes[i];
+    }
+    Uuid::from_slice(buffer.as_ref()).unwrap()
   }
 
   /// 指定されたバイト列から公開鍵を復元します。
   fn from_bytes(bytes: &[u8]) -> Result<Self>
-    where
-      Self: Sized;
+  where
+    Self: Sized;
 
   /// この公開鍵に対する秘密鍵によって作成された署名を検証します。
   fn verify_signature(&self, signature: Signature, message: &[u8]) -> Result<bool>;
