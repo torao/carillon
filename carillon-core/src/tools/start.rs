@@ -2,6 +2,7 @@ use std::path::Path;
 
 use crate::context;
 use crate::Result;
+use crate::protocol::http::http_server;
 
 pub struct Start<'a> {
   pub dir: &'a Path,
@@ -14,9 +15,10 @@ impl<'a> Start<'a> {
       let context = context::Context::new(dir)?;
       let key_pair = context.key_pair()?;
       log::info!(
-        "Booting Carillong node: at address {}",
+        "Booting Carillon node: {}",
         key_pair.public_key().address().to_string()
       );
+      http_server()?;
       Ok(())
     })
   }
